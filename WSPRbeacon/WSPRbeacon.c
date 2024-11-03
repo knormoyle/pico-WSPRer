@@ -105,8 +105,8 @@ WSPRbeaconContext *WSPRbeaconInit(const char *pcallsign, const char *pgridsquare
         {
 	        for (int i=0;i < 10;i+2)
             {
-                schedule[start_minute]=1;      //do 1st U4b packet
-                schedule[(start_minute+1)]=2;   //do second U4B packet 2 minutes later
+                schedule[i]=1;      //do 1st U4b packet
+                schedule[(i+1)]=2;   //do second U4B packet 2 minutes later
             }
         }
         else 
