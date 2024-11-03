@@ -96,19 +96,35 @@ WSPRbeaconContext *WSPRbeaconInit(const char *pcallsign, const char *pgridsquare
 		}
 
 	}
-else                                       //if we get here, U4B is enabled
+
+    else //if we get here, U4B is enabled
 	{
-		schedule[start_minute]=1;          //do 1st U4b packet at selected minute 
-		schedule[(start_minute+2)%10]=2;   //do second U4B packet 2 minutes later
-		if (TELEN_config[0]!='-') schedule[(start_minute+4)%10]=5;  //enable TELEN #1
-		if (TELEN_config[2]!='-') schedule[(start_minute+6)%10]=6;   //enable TELEN #2 (if someone tried to run Zachtek and Both TELENs, start_minute+6)%10 will get overwritten below anywauy)
+        // kevin 11_3_24
+        // send on 4 u4b channels (every 4 minutes) so we get faster output for test
+        if (pcallsign == "TE4MIN") // callsign used for test
+        {
+	        for (int i=0;i < 10;i+2)
+            {
+                schedule[start_minute]=1;      //do 1st U4b packet
+                schedule[(start_minute+1)]=2;   //do second U4B packet 2 minutes later
+            }
+        }
+        else 
+        {
+		    schedule[start_minute]=1;          //do 1st U4b packet at selected minute 
+		    schedule[(start_minute+2)%10]=2;   //do second U4B packet 2 minutes later
+        }
+
+		if (TELEN_config[0]!='-') schedule[(start_minute+4)%10]=5; //enable TELEN #1
+		if (TELEN_config[2]!='-') schedule[(start_minute+6)%10]=6; //enable TELEN #2 (if someone tried to run Zachtek and Both TELENs, start_minute+6)%10 will get overwritten below anyway)
 
 		if (suffix != 253)    // if Suffix enabled, Do zachtek messages 4 mins BEFORE (ie 6 minutes in future) of u4b (because minus (-) after char to decimal conversion is 253)
-			{
-				schedule[(start_minute+6)%10]=3;     //if we get here, both U4B and Zachtek (suffix) enabled. hopefully telen not also enabled!
-				schedule[(start_minute+8)%10]=4;
-			}
+        {
+            schedule[(start_minute+6)%10]=3;     //if we get here, both U4B and Zachtek (suffix) enabled. hopefully telen not also enabled!
+            schedule[(start_minute+8)%10]=4;
+        }
 	}
+
 	at_least_one_GPS_fixed_has_been_obtained=0;
 	transmitter_status=0;
 

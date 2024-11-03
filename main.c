@@ -586,7 +586,19 @@ show_values();          /* shows current VALUES  AND list of Valid Commands */
 							write_NVRAM(); 
 						break;
 
-			case 'K':get_user_input("Klock speed (default 115): ", _Klock_speed, sizeof(_Klock_speed)); write_NVRAM(); break;
+			case 'K':get_user_input("Klock speed (default 115): ", _Klock_speed, sizeof(_Klock_speed)); 
+                    write_NVRAM(); 
+                    // frequencies like 205 mhz will PANIC, System clock of 205000 kHz cannot be exactly achieved
+                    // should detect the failure and change the nvram, otherwise we're stuck even on reboot
+                    const uint32_t clkhz =  atoi(_Klock_speed) * 1000000L;
+                    // this doesn't change the pll, just checks
+                    if (!set_sys_clock_khz(clkhz / kHz, false))
+                    {
+                        printf("\n NOT LEGAL TO SET SYSTEM KLOCK TO %dMhz. Cannot be achieved. Using 115\n", PLL_SYS_MHZ);
+                        strcpy(_Klock_speed,"115");
+                        write_NVRAM();
+                    }
+                    break;
 			case 'F':
 				printf("Fixed Frequency output (antenna tuning mode). Enter frequency (for example 14.097) or 0 for exit.\n\t");
 				char _tuning_freq[7];
