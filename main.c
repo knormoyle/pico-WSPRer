@@ -938,14 +938,16 @@ void InitPicoPins(void)
     // from the pico sdk:
     // enum gpio_drive_strength { GPIO_DRIVE_STRENGTH_2MA = 0, GPIO_DRIVE_STRENGTH_4MA = 1, GPIO_DRIVE_STRENGTH_8MA = 2, GPIO_DRIVE_STRENGTH_12MA = 3 }
     enum gpio_drive_strength drive_strength;
-    if (_callsign == "R2MAD")  
+    if (0==strcmp(_callsign,"R2MAD"))  
         drive_strength = GPIO_DRIVE_STRENGTH_2MA;
-    else if (_callsign == "R4MAD")  
+    else if (0==strcmp(_callsign,"R4MAD"))  
         drive_strength = GPIO_DRIVE_STRENGTH_4MA;
-    else if (_callsign == "R8MAD")  
+    else if (0==strcmp(_callsign, "R8MAD"))  
         drive_strength = GPIO_DRIVE_STRENGTH_8MA;
-    else if (_callsign == "R12MAD")  
+    else if (0==strcmp(_callsign,"R12MAD"))  
         drive_strength = GPIO_DRIVE_STRENGTH_12MA;
+    else if (0==strcmp(_callsign,"AD6Z"))  
+        drive_strength = GPIO_DRIVE_STRENGTH_2MA;
     // can have alphanumerc in first 3 chars, alpha in last 3?  space can be in last 3? (telemetry doesn't use spac)e
     else
         // FIX! just force to 2MA always? (except for test cases above)

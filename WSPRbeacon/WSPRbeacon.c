@@ -101,13 +101,36 @@ WSPRbeaconContext *WSPRbeaconInit(const char *pcallsign, const char *pgridsquare
 	{
         // kevin 11_3_24
         // send on 4 u4b channels (every 4 minutes) so we get faster output for test
-        if (pcallsign == "TE4MIN") // callsign used for test
+        // this can be rough since no time left to recover 3dfx if RF interference with WSPR
+        // not sure pcallsign is always null terminated?
+        // AD6Z sizeof will be 4 if not null terminated?
+        // strlen will walk looking for null term. undefined if no null term?
+        printf("pcallsign '%s' strlen %d\n", pcallsign, strlen(pcallsign));
+
+        if (0==strcmp(pcallsign, "TE4MIN"))
         {
+            // doesn't depend on null term
+            printf("TE4MIN starting minute spray across 5 u4b channels)\n");
 	        for (int i=0;i < 10;i+2)
             {
                 schedule[i]=1;      //do 1st U4b packet
                 schedule[(i+1)]=2;   //do second U4B packet 2 minutes later
             }
+        }
+        // not sure pcallsign is always null terminated? it should be.
+        // FIX! what if it just starts with AD6Z?
+        // else if (pcallsign == "AD6Z") // reserve two u4b like it's two balloons. 
+        else if (0==strcmp(pcallsign, "AD6Z"))
+        { 
+            printf("AD6Z starting minute spray double channel\n");
+		    schedule[start_minute]=1;          //do 1st U4b packet at selected minute 
+		    schedule[(start_minute+2)%10]=2;   //do second U4B packet 2 minutes later
+            // this will be like doing two telen, but with normal transmissions
+            // will the gps stay locked?
+		    schedule[(start_minute+4)%10]=1;   // same but for (..+6)%10 starting minute channel
+		    schedule[(start_minute+6)%10]=2;   // the corresponding telemetry start
+            // the 8 and 9 starting minutes will be empty for gps lock
+            // we can compare the two channels on traquito web site, and compare
         }
         else 
         {
