@@ -180,10 +180,30 @@ void PioDCOStart(PioDco *pdco)
 /// @param pdco Ptr to DCO context.
 void PioDCOStop(PioDco *pdco)
 {
-    assert_(pdco);
     pio_sm_set_enabled(pdco->_pio, pdco->_ism, false);
-
     pdco->_is_enabled = NO;
+    //*****************
+    // kevin 11_3_24
+    // leave all pio pins == 0 so no current thru load resistor or balun, and leave pio config as it was
+    pio_sm_set_pins(pdco->_pio, pdco->_ism, 0);
+    //*****************
+
+    // https://lorenz-ruprecht.at/docu/pico-sdk/1.4.0/html/group__hardware__pio.html
+    // void pio_sm_set_pins	( PIO pio,
+    // uint sm,
+    // uint32_t pin_values 
+    // )		
+    // Use a state machine to set a value on all pins for the PIO instance.
+    // 
+    // This method repeatedly reconfigures the target state machine's pin configuration and executes 'set' instructions to set values on all 32 pins, before restoring the state machine's pin configuration to what it was.
+    // 
+    // This method is provided as a convenience to set initial pin states, and should not be used against a state machine that is enabled.
+    // 
+    // Parameters
+    // pio	The PIO instance; either pio0 or pio1
+    // sm	State machine index (0..3) to use
+    // pin_values	the pin values to set
+
 }
 
 /// @brief Main worker task of DCO V.2. It is time critical, so it ought to be run on

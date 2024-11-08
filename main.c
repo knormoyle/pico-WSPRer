@@ -566,6 +566,8 @@ show_values();          /* shows current VALUES  AND list of Valid Commands */
 			//case 'R':printf(CLEAR_SCREEN);printf("\n\nCorrupting data..");strncpy(_callsign,"!^&*(",6);write_NVRAM();watchdog_enable(100, 1);for(;;)	{}  //used for testing NVRAM check on boot feature
 			case 'C':get_user_input("Enter callsign: ",_callsign,sizeof(_callsign)); convertToUpperCase(_callsign); write_NVRAM(); break;
 			case 'S':get_user_input("Enter single digit numeric suffix: ", _suffix, sizeof(_suffix)); convertToUpperCase(_suffix); write_NVRAM(); break;
+// background
+// https://www.makermatrix.com/blog/read-and-write-data-with-the-pi-pico-onboard-flash/
 			case 'U':get_user_input("Enter U4B channel: ", _U4B_chan, sizeof(_U4B_chan)); process_chan_num(); write_NVRAM(); break;
 			case 'I':get_user_input("Enter id13: ", _id13,sizeof(_id13)); convertToUpperCase(_id13); write_NVRAM(); break; //still possible but not listed or recommended
 			case 'M':get_user_input("Enter starting Minute: ", _start_minute, sizeof(_start_minute)); write_NVRAM(); break; //still possible but not listed or recommended. i suppose needed for when to start standalone beacon or Zachtek
@@ -576,7 +578,9 @@ show_values();          /* shows current VALUES  AND list of Valid Commands */
 			case 'P':get_user_input("custom Pcb mode (0,1): ", _custom_PCB, sizeof(_custom_PCB)); write_NVRAM(); break;
 			case 'T':show_TELEN_msg();get_user_input("TELEN config: ", _TELEN_config, sizeof(_TELEN_config)); convertToUpperCase(_TELEN_config); write_NVRAM(); break;
 			case 'B':get_user_input("Battery mode (0,1): ", _battery_mode, sizeof(_battery_mode)); write_NVRAM(); break;
-			case 'D':get_user_input("Data-log mode (0,1,Wipe,Dump): ", _Datalog_mode, sizeof(_Datalog_mode));
+			case 'D':get_user_i// background
+// https://www.makermatrix.com/blog/read-and-write-data-with-the-pi-pico-onboard-flash/
+nput("Data-log mode (0,1,Wipe,Dump): ", _Datalog_mode, sizeof(_Datalog_mode));
 						convertToUpperCase(_Datalog_mode);
 						if ((_Datalog_mode[0]=='D') || (_Datalog_mode[0]=='W') ) 
 								{
@@ -640,6 +644,8 @@ show_values();          /* shows current VALUES  AND list of Valid Commands */
  * prints hexa listing of data and calls function which check data validity
  * 
  */
+// background
+// https://www.makermatrix.com/blog/read-and-write-data-with-the-pi-pico-onboard-flash/
 void read_NVRAM(void)
 {
 const uint8_t *flash_target_contents = (const uint8_t *) (XIP_BASE + FLASH_TARGET_OFFSET); //a pointer to a safe place after the program memory

@@ -120,9 +120,15 @@ WSPRbeaconContext *WSPRbeaconInit(const char *pcallsign, const char *pgridsquare
         // not sure pcallsign is always null terminated? it should be.
         // FIX! what if it just starts with AD6Z?
         // else if (pcallsign == "AD6Z") // reserve two u4b like it's two balloons. 
-        else if (0==strcmp(pcallsign, "AD6Z"))
+        else if (
+            0!=(
+            strcmp(pcallsign, "AD6Z") ||
+            strcmp(pcallsign, "R2MAD") ||
+            strcmp(pcallsign, "R4MAD") ||
+            strcmp(pcallsign, "R8MAD") ||
+            strcmp(pcallsign, "R12MAD") ))
         { 
-            printf("AD6Z starting minute spray double channel\n");
+            printf("%s starting minute spray double channel\n", pcallsign);
 		    schedule[start_minute]=1;          //do 1st U4b packet at selected minute 
 		    schedule[(start_minute+2)%10]=2;   //do second U4B packet 2 minutes later
             // this will be like doing two telen, but with normal transmissions
