@@ -4,7 +4,7 @@
 //  https:// www.qrz.com/db/r2bdy
 //  PROJECT PAGE
 //  https:// github.com/RPiks/pico-WSPR-tx
-///////////////////////////////////////////////////////////////////////////////
+
 #include "WSPRbeacon.h"
 #include <WSPRutility.h>
 #include <maidenhead.h>
@@ -94,14 +94,16 @@ int gpio,  uint8_t start_minute, uint8_t id13, uint8_t suffix, const char *TELEN
     4:Zachtek 2nd,5:extended TELEN #1 6:extended TELEN #2
     */
 
-    // if U4B protocol disabled ('--' entered for Id13),  we will ONLY do Type 1 [and Type3 (zachtek)] at the specified minute
+    // if U4B protocol disabled ('--' entered for Id13),  
+    // we will ONLY do Type 1 [and Type3 (zachtek)] at the specified minute
     if (id13==253) {
         if (suffix != 253) {
             // we get here if suffix is not '-', meaning that Zachtek (wspr type 3) message is desired
             schedule[start_minute]=3;
             schedule[(start_minute+2)%10]=4;
         } else {
-            // we get here only is both U4B and ZAchtek(suffix) are disabled. this is for standalone (WSPR Type-1) only beacon mode
+            // we get here only is both U4B and ZAchtek(suffix) are disabled. 
+            // this is for standalone (WSPR Type-1) only beacon mode
             schedule[start_minute]=3;
         }
     }
@@ -146,10 +148,14 @@ int gpio,  uint8_t start_minute, uint8_t id13, uint8_t suffix, const char *TELEN
         }
 
         if (TELEN_config[0]!='-') schedule[(start_minute+4)%10]=5; // enable TELEN #1
-        if (TELEN_config[2]!='-') schedule[(start_minute+6)%10]=6; // enable TELEN #2 (if someone tried to run Zachtek and Both TELENs, start_minute+6)%10 will get overwritten below anyway)
+        // enable TELEN #2 
+        // (if someone tried to run Zachtek and Both TELENs, 
+        // start_minute+6)%10 will get overwritten below anyway)
+        if (TELEN_config[2]!='-') schedule[(start_minute+6)%10]=6; 
 
         // if Suffix enabled,
-        // Do zachtek messages 4 mins BEFORE (ie 6 minutes in future) of u4b (because minus (-) after char to decimal conversion is 253)
+        // Do zachtek messages 4 mins BEFORE (ie 6 minutes in future) of u4b 
+        // (because minus (-) after char to decimal conversion is 253)
         if (suffix != 253) {
             // if we get here, both U4B and Zachtek (suffix) enabled. hopefully telen not also enabled!
             schedule[(start_minute+6)%10]=3;
@@ -162,13 +168,14 @@ int gpio,  uint8_t start_minute, uint8_t id13, uint8_t suffix, const char *TELEN
     return p;
 }
 
-//*****************************************************************************************************************************
-//******************************************************************************************************************************
+//*******************************************************************************
+//*******************************************************************************
 /// @brief Arranges WSPR sending in accordance with pre-defined schedule.
 /// @brief It works only if GPS receiver available (for now).
 /// @param pctx Ptr to Context.
 /// @return 0 if OK, -1 if NO GPS received available
-int WSPRbeaconTxScheduler(WSPRbeaconContext *pctx, int verbose, int GPS_PPS_PIN)   // called every half second from Main.c
+// called every half second from Main.c
+int WSPRbeaconTxScheduler(WSPRbeaconContext *pctx, int verbose, int GPS_PPS_PIN)   
 {
     assert_(pctx);
 
@@ -215,7 +222,7 @@ int WSPRbeaconTxScheduler(WSPRbeaconContext *pctx, int verbose, int GPS_PPS_PIN)
             StampPrintf("> FORCING XMISSION! for debugging   <"); pctx->_txSched.led_mode = 4;
             PioDCOStart(pctx->_pTX->_p_oscillator);
             // If this is disabled, the packet is all zeroes, and it xmits an unmodulated steady frequency.
-            // but if you didnt power cycle since enabling Force_xmition there will still be data stuck in the buffer...
+            // but if you didnt power cycle since enabling Force_xmition will still have data in buffer
             // WSPRbeaconCreatePacket(pctx,0);
             sleep_ms(100);
             WSPRbeaconSendPacket(pctx);
@@ -256,7 +263,7 @@ int WSPRbeaconTxScheduler(WSPRbeaconContext *pctx, int verbose, int GPS_PPS_PIN)
             transmitter_status=0;
             PioDCOStop(pctx->_pTX->_p_oscillator); // Stop the oscilator
         }
-    } 
+    }
     // prevent transmission if a location has never been received
     else if (
         is_GPS_available && at_least_one_slot_has_elapsed
@@ -271,7 +278,8 @@ int WSPRbeaconTxScheduler(WSPRbeaconContext *pctx, int verbose, int GPS_PPS_PIN)
 
         PioDCOStart(pctx->_pTX->_p_oscillator);
         transmitter_status=1;
-        // the schedule determines packet type (1-4 for U4B 1st msg,U4B 2nd msg,Zachtek 1st, Zachtek 2nd)
+        // the schedule determines packet type 
+        // (1-4 for U4B 1st msg,U4B 2nd msg,Zachtek 1st, Zachtek 2nd)
         WSPRbeaconCreatePacket(pctx, schedule[current_minute] );
         sleep_ms(50);
         WSPRbeaconSendPacket(pctx);
@@ -316,13 +324,16 @@ int WSPRbeaconTxScheduler(WSPRbeaconContext *pctx, int verbose, int GPS_PPS_PIN)
             rtc_set_datetime(&t);
             uart_default_tx_wait_blocking();
             datetime_t alarm_time = t;
-            // sleep for 55 minutes. 46 ~= 55 mins X (115Mhz/133Mhz)  //wuz, the -3 is to allow 1 TELEN in low power mode
+            // sleep for 55 minutes. 46 ~= 55 mins X (115Mhz/133Mhz)  
+            //wuz, the -3 is to allow 1 TELEN in low power mode
             alarm_time.min += (46-3);
-            gpio_set_irq_enabled(GPS_PPS_PIN, GPIO_IRQ_EDGE_RISE, false); // this is needed to disable IRQ callback on PPS
+            // this is needed to disable IRQ callback on PPS
+            gpio_set_irq_enabled(GPS_PPS_PIN, GPIO_IRQ_EDGE_RISE, false); 
             multicore_reset_core1();  // this is needed, otherwise causes instant reboot
             // this reduces sleep draw to 2mA! (without this will still sleep, but only at 8mA)
             sleep_run_from_dormant_source(DORMANT_SOURCE_ROSC);
-            sleep_goto_sleep_until(&alarm_time, &sleep_callback); // blocks here during sleep perfiod
+            // blocks here during sleep period
+            sleep_goto_sleep_until(&alarm_time, &sleep_callback); 
 
             watchdog_enable(100, 1);
             for (;;) {}
@@ -333,12 +344,14 @@ int WSPRbeaconTxScheduler(WSPRbeaconContext *pctx, int verbose, int GPS_PPS_PIN)
 }
 
 
-//******************************************************************************************************************************
-//1-6.  1: U4B 1st msg,U4B 2: 2nd msg, 3: Zachtek 1st, 4: Zachtek 2nd 5:U4B telen 1, 6:U4B telen 2
+//*******************************************************************
+// 1-6.  1: U4B 1st msg,U4B 2: 2nd msg, 
+// 3: Zachtek 1st, 4: Zachtek 2nd 5:U4B telen 1, 6:U4B telen 2
 int WSPRbeaconCreatePacket(WSPRbeaconContext *pctx,int packet_type)
 {
     /*
-    // turns a fan on via GPIO 18 every other packet. this forces temperature swings for testing TCXO stability
+    // turns a fan on via GPIO 18 every other packet. 
+    // this forces temperature swings for testing TCXO stability
     if(0 == ++tikk % 2)
         gpio_put(18, 1);
     if(0 == (tikk+1) % 2)
@@ -348,21 +361,28 @@ int WSPRbeaconCreatePacket(WSPRbeaconContext *pctx,int packet_type)
     assert_(pctx);
     //********************************
     if (packet_type==1) {
-        // U4B first msg 
+        // U4B first msg
         pctx->_u8_txpower =10; // hardcoded at 10dbM when doing u4b MSG 1
         if (pctx->_txSched.verbosity>=3) printf("creating U4B packet 1\n");
         char _4_char_version_of_locator[5];
-        strncpy(_4_char_version_of_locator, pctx->_pu8_locator, 4);     // only take first 4 chars of locator
+        // only take first 4 chars of locator
+        strncpy(_4_char_version_of_locator, pctx->_pu8_locator, 4);     
         _4_char_version_of_locator[4]=0;  // add null terminator
 
         // look in WSPRutility.c for wspr_encode
-        wspr_encode(pctx->_pu8_callsign, _4_char_version_of_locator, pctx->_u8_txpower, pctx->_pu8_outbuf, pctx->_txSched.verbosity);
+        wspr_encode(
+            pctx->_pu8_callsign,    
+            _4_char_version_of_locator, 
+            pctx->_u8_txpower, 
+            pctx->_pu8_outbuf, 
+            pctx->_txSched.verbosity);
 
-        // record the values of grid chars 5 and 6 now, but they won't be used until packet type 2 is created
+        // record the values of grid chars 5 and 6 now, 
+        // but they won't be used until packet type 2 is created
         grid5 = pctx->_pu8_locator[4];
         grid6 = pctx->_pu8_locator[5];
          // save the value for later when used in 2nd packet
-        altitude_snapshot=pctx->_pTX->_p_oscillator->_pGPStime->_altitude;    
+        altitude_snapshot=pctx->_pTX->_p_oscillator->_pGPStime->_altitude;
         at_least_one_first_packet_sent=1;
     }
     //********************************
@@ -373,9 +393,11 @@ int WSPRbeaconCreatePacket(WSPRbeaconContext *pctx,int packet_type)
         char Grid_U4B[7];
         uint8_t  power_U4B;
 
-        // if a first packet was never created, the snapshots are incorrect. so put something in there. (issue %46)
+        // if a first packet was never created, the snapshots are incorrect. 
+        // so put something in there. (issue %46)
         if (at_least_one_first_packet_sent==0) {
-            // record the values of grid chars 5 and 6 now, but they won't be used until packet type 2 is created
+            // record the values of grid chars 5 and 6 now, 
+            // but they won't be used until packet type 2 is created
             grid5 = pctx->_pu8_locator[4];
             grid6 = pctx->_pu8_locator[5];
             altitude_snapshot=pctx->_pTX->_p_oscillator->_pGPStime->_altitude;
@@ -391,7 +413,8 @@ int WSPRbeaconCreatePacket(WSPRbeaconContext *pctx,int packet_type)
         */
 
         // pick apart inputs
-        // char grid5 = pctx->_pu8_locator[4];  values of grid 5 and 6 were already set previously when packet 1 was created
+        // char grid5 = pctx->_pu8_locator[4];  
+        // values of grid 5 and 6 were already set previously when packet 1 was created
         // char grid6 = pctx->_pu8_locator[5];
         // convert inputs into components of a big number
         uint8_t grid5Val = grid5 - 'A';
@@ -447,13 +470,16 @@ int WSPRbeaconCreatePacket(WSPRbeaconContext *pctx,int packet_type)
         // uint8_t tempCNum      = tempC - -50;
         uint8_t tempCNum      = ((uint8_t) tempC - -50) % 90;
         uint8_t voltageNum    = ((uint8_t)round(((voltage * 100) - 300) / 5) + 20) % 40;
-        uint8_t speedKnotsNum = pctx->_pTX->_p_oscillator->_pGPStime->_time_data.sat_count;   // encoding # of satelites into knots
+        // encoding # of satelites into knots
+        uint8_t speedKnotsNum = pctx->_pTX->_p_oscillator->_pGPStime->_time_data.sat_count;   
 
-        // handle possible illegal (0-41 legal range). clamp to max, not wrap. maybe from bad GNGGA field (wrong sat count?)
+        // handle possible illegal (0-41 legal range). clamp to max, not wrap. 
+        // maybe from bad GNGGA field (wrong sat count?)
         if (speedKnotsNum > 41) speedKnotsNum = 41;
         //****************
 
-        // kevin old code since this isn't 0 or 1 it should really check zero. don't want to say valid if dead reckoning fix? (6)
+        // kevin old code since this isn't 0 or 1 it should really check zero. 
+        // don't want to say valid if dead reckoning fix? (6)
         uint8_t gpsValidNum   = pctx->_pTX->_p_oscillator->_pGPStime->_time_data._u8_is_solution_active;
         // changed sept 27 2024.
         // because the traquito site won't show the 6 char grid if this bit is even momentarily off.
@@ -495,7 +521,8 @@ int WSPRbeaconCreatePacket(WSPRbeaconContext *pctx,int packet_type)
     if (packet_type==3) {
         // WSPR type 1 message (for standalone beacon mode, or 1st part of Zachtek protocol)
         uint8_t suffix_as_string[2];
-        // if just using standalone beacon,  power is reported as 10. If doing Zachtek, this gets overwritten below with rough altitude value
+        // if just using standalone beacon,  power is reported as 10. If doing Zachtek, this gets 
+        /// overwritten below with rough altitude value
         uint8_t  power_value=10;
         if (pctx->_txSched.verbosity>=3) printf("creating WSPR type 1 [Zachtek packet 1]\n");
 
@@ -565,13 +592,23 @@ int WSPRbeaconCreatePacket(WSPRbeaconContext *pctx,int packet_type)
                         pctx->_pTX->_p_oscillator->_pGPStime->_altitude,power_value,altitude_as_power_fine);
             }
         }
-        wspr_encode(_callsign_for_TYPE1, pctx->_pu8_locator, power_value, pctx->_pu8_outbuf,pctx->_txSched.verbosity);
+        wspr_encode(
+            _callsign_for_TYPE1, 
+            pctx->_pu8_locator, 
+            power_value, 
+            pctx->_pu8_outbuf,
+            pctx->_txSched.verbosity);
     }
 
     //2nd Zachtek (WSPR type 3 message)
-    if (packet_type==4) { 
+    if (packet_type==4) {
         if (pctx->_txSched.verbosity>=3) printf("creating Zachtek packet 2 (WSPR type 3)\n");
-        wspr_encode(add_brackets(_callsign_for_TYPE1), pctx->_pu8_locator, altitude_as_power_fine, pctx->_pu8_outbuf,pctx->_txSched.verbosity);
+        wspr_encode(
+            add_brackets(_callsign_for_TYPE1), 
+            pctx->_pu8_locator, 
+            altitude_as_power_fine, 
+            pctx->_pu8_outbuf,
+            pctx->_txSched.verbosity);
     }
 
     // TELEN #1 or #2 extended telemetry, gets sent right after the two U4B packets
@@ -582,14 +619,12 @@ int WSPRbeaconCreatePacket(WSPRbeaconContext *pctx,int packet_type)
         uint32_t telen_val1;
         uint32_t telen_val2;
 
-        if (packet_type==5) {
-            // TELEN #1 
+        if (packet_type==5) { // TELEN #1
             // gets values for TELEN from global vars
             telen_val1=pctx->_txSched.TELEN1_val1;
             telen_val2=pctx->_txSched.TELEN1_val2;
             printf("encoding TELEN #1\n");
-        } else {
-            // TELEN #2 
+        } else { // TELEN #2
             // gets values for TELEN from global vars
             telen_val1=pctx->_txSched.TELEN2_val1;
             telen_val2=pctx->_txSched.TELEN2_val2;
@@ -613,7 +648,8 @@ int WSPRbeaconCreatePacket(WSPRbeaconContext *pctx,int packet_type)
         // converts two 32bit ints into 8 characters and one byte to be transmitted
         encode_telen2(telen_val1,telen_val2,telen_chars, &telen_power,packet_type);
 
-        _callsign[0] =  pctx->_txSched.id13[0];   // callsign: id13[0], telen char0, id13[1], telen char1, telen char2, telen char3
+        // callsign: id13[0], telen char0, id13[1], telen char1, telen char2, telen char3
+        _callsign[0] =  pctx->_txSched.id13[0];   
         _callsign[1] =  telen_chars[0];
         _callsign[2] =  pctx->_txSched.id13[1];
         _callsign[3] =  telen_chars[1];
@@ -626,19 +662,23 @@ int WSPRbeaconCreatePacket(WSPRbeaconContext *pctx,int packet_type)
         _4_char_version_of_locator[4]=0;  // add null terminator
 
         // look in WSPRutility.c for wspr_encode
-        wspr_encode(_callsign, _4_char_version_of_locator, telen_power, pctx->_pu8_outbuf, pctx->_txSched.verbosity);
+        wspr_encode(
+            _callsign, 
+            _4_char_version_of_locator, 
+            telen_power, 
+            pctx->_pu8_outbuf, 
+            pctx->_txSched.verbosity);
     }
     return 0;
 }
 
 
 
-////////////////////////////////////////////////////////////////////
-//******************************************************************************************************************************
+//*********************************************************************
 /// @brief Sends a prepared WSPR packet using TxChannel.
 /// @param pctx Context.
 /// @return 0, if OK.
-//******************************************************************************************************************************
+//*********************************************************************
 int WSPRbeaconSendPacket(const WSPRbeaconContext *pctx)
 {
     assert_(pctx);
@@ -650,13 +690,13 @@ int WSPRbeaconSendPacket(const WSPRbeaconContext *pctx)
     return 0;
 }
 
-////////////////////////////////////////////////////////////////////
-//******************************************************************************************************************************
+//*********************************************************************
 /// @brief encodes data for extended telemetry (TELEN)
-/// @param telen_val1,telen_val2: the values to encode, telen_chars: the output characters, telen_power: output power (in dbm)
-//******************************************************************************************************************************
-void encode_telen(uint32_t telen_val1,uint32_t telen_val2,char * telen_chars,uint8_t * telen_power, uint8_t packet_type)
-{
+/// @param telen_val1,telen_val2: the values to encode, telen_chars: 
+// the output characters, telen_power: output power (in dbm)
+//**********************************************************************
+void encode_telen(uint32_t telen_val1, uint32_t telen_val2, char * telen_chars,
+        uint8_t * telen_power, uint8_t packet_type) {
     /* i made two ways of encoding telen (encode_telen and encode_telen2).
     they both produce identical results.
     the first one I painfully made by reverse engineering results.
@@ -690,7 +730,10 @@ void encode_telen(uint32_t telen_val1,uint32_t telen_val2,char * telen_chars,uin
     telen_chars[7]= '0'+floor(temf / 4.75); temf-=((telen_chars[7]-'0')*4.75);
     int i=round(temf/0.25);  // there are 19 possible dbm values. And 4.75/19=0.25
 
-    /* The original (AND BROKEN) way.  you kept thinking of certain bits being resevered for certain functions, but on the decode end they are expecting you to add, not set, so you must play along...
+    // The original (AND BROKEN) way.  
+    // you kept thinking of certain bits being resevered for certain functions, 
+    // but on the decode end they are expecting you to add, not set, so you must play along...
+    /*
         i &= ~(1<<0); // clear lowest bit aka gps-sat (always for TELEN #1 and #2)
         if (packet_type==6)
             i |= (1<<1); // set 2nd bit (GPSValid)     for TELEN #2
@@ -701,13 +744,13 @@ void encode_telen(uint32_t telen_val1,uint32_t telen_val2,char * telen_chars,uin
     // add 2 (aka the gps-sat bit) for telen #2 only (the new, correct, way...)
     if (packet_type==6) i=i+2;
     *telen_power = valid_dbm[i];
-    printf("(Orig) val1: %d val2: %d the chars: %s the power:(as dBm: %d)\n",telen_val1,telen_val2,telen_chars,*telen_power);
+    printf("(Orig) val1: %d val2: %d the chars: %s the power:(as dBm: %d)\n",
+        telen_val1,telen_val2,telen_chars,*telen_power);
     telen_chars[8]=0; // null terminate
 }
 
 //********************************************************************
-void encode_telen2(uint32_t telen_val1,uint32_t telen_val2,char * telen_chars,uint8_t * telen_power, uint8_t packet_type)
-{
+void encode_telen2(uint32_t telen_val1,uint32_t telen_val2,char * telen_chars,uint8_t * telen_power, uint8_t packet_type) {
     uint32_t val = telen_val1;
     // extract into altered dynamic base
     uint8_t id6Val = val % 26; val = val / 26;
@@ -739,15 +782,15 @@ void encode_telen2(uint32_t telen_val1,uint32_t telen_val2,char * telen_chars,ui
     if (packet_type==6) powerVal=powerVal+2;
     *telen_power=valid_dbm[powerVal];
 
-    printf("(New)val1: %d val2: %d the chars: %s the power:(as dBm: %d)\n",telen_val1,telen_val2,telen_chars,*telen_power);
+    printf("(New)val1: %d val2: %d the chars: %s the power:(as dBm: %d)\n",
+        telen_val1,telen_val2,telen_chars,*telen_power);
     telen_chars[8]=0; // null terminate
 }
 
-///////////////////////////////////////////////////////////
 /// @brief Dumps the beacon context to stdio.
 /// @param pctx Ptr to Context.
-void WSPRbeaconDumpContext(const WSPRbeaconContext *pctx)  // called ~ every 20 secs from main.c
-{
+// called ~ every 20 secs from main.c 
+void WSPRbeaconDumpContext(const WSPRbeaconContext *pctx) {
     assert_(pctx);
     assert_(pctx->_pTX);
 
@@ -775,13 +818,13 @@ void WSPRbeaconDumpContext(const WSPRbeaconContext *pctx)  // called ~ every 20 
     StampPrintf("rmc:%lu", pGPS->_time_data._u32_nmea_gprmc_count); */
     StampPrintf("ppb:%lld", pGPS->_time_data._i32_freq_shift_ppb);
     StampPrintf("LED Mode: %d",pctx->_txSched.led_mode);
-    StampPrintf("Grid: %s",(char *)WSPRbeaconGetLastQTHLocator(pctx));
-    StampPrintf("lat: %lli",pctx->_pTX->_p_oscillator->_pGPStime->_time_data._i64_lat_100k);
-    StampPrintf("lon: %lli",pctx->_pTX->_p_oscillator->_pGPStime->_time_data._i64_lon_100k);
-    StampPrintf("altitude: %f",pctx->_pTX->_p_oscillator->_pGPStime->_altitude);
-    StampPrintf("current minute: %i",current_minute);
+    StampPrintf("Grid: %s", (char *)WSPRbeaconGetLastQTHLocator(pctx));
+    StampPrintf("lat: %lli", pctx->_pTX->_p_oscillator->_pGPStime->_time_data._i64_lat_100k);
+    StampPrintf("lon: %lli", pctx->_pTX->_p_oscillator->_pGPStime->_time_data._i64_lon_100k);
+    StampPrintf("altitude: %f", pctx->_pTX->_p_oscillator->_pGPStime->_altitude);
+    StampPrintf("current minute: %i", current_minute);
 }
-///////////////////////////////////////////////////////////
+
 /// @brief Extracts maidenhead type QTH locator (such as KO85) using GPS coords.
 /// @param pctx Ptr to WSPR beacon context.
 /// @return ptr to string of QTH locator (static duration object inside get_mh).
@@ -807,8 +850,7 @@ char *WSPRbeaconGetLastQTHLocator(const WSPRbeaconContext *pctx)
     return get_mh(lat, lon, 6);
 }
 
-uint8_t WSPRbeaconIsGPSsolutionActive(const WSPRbeaconContext *pctx)
-{
+uint8_t WSPRbeaconIsGPSsolutionActive(const WSPRbeaconContext *pctx) {
     assert_(pctx);
     assert_(pctx->_pTX);
     assert_(pctx->_pTX->_p_oscillator);
@@ -817,11 +859,9 @@ uint8_t WSPRbeaconIsGPSsolutionActive(const WSPRbeaconContext *pctx)
     return YES == pctx->_pTX->_p_oscillator->_pGPStime->_time_data._u8_is_solution_active;
 }
 
-///////////////////////////////////////////////////////////
 // used for Zachtek style
 // adds <> around the callsign. this is what triggers a type 3 message.
-char* add_brackets(const char * call) 
-{
+char* add_brackets(const char * call) {
     static char temp_holder[20];
     temp_holder[0]=0;
     char first_brack[2]= "<";
@@ -832,8 +872,7 @@ char* add_brackets(const char * call)
     return temp_holder;
 }
 
-char EncodeBase36(uint8_t val)
-{
+char EncodeBase36(uint8_t val) {
     char retVal;
     if (val < 10) retVal = '0' + val;
     else retVal = 'A' + (val - 10);
@@ -843,9 +882,7 @@ char EncodeBase36(uint8_t val)
 /// @brief Sets dial (baseband minima) freq.
 /// @param pctx Context.
 /// @param freq_hz the freq., Hz.
-//******************************************************************************************************************************
-void WSPRbeaconSetDialFreq(WSPRbeaconContext *pctx, uint32_t freq_hz)
-{
+void WSPRbeaconSetDialFreq(WSPRbeaconContext *pctx, uint32_t freq_hz) {
     assert_(pctx);
     pctx->_pTX->_u32_dialfreqhz = freq_hz;
 }
