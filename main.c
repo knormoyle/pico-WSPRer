@@ -145,7 +145,7 @@ int main()
 	read_NVRAM(); //reads values of _callsign,  _verbosity etc from NVRAM. MUST READ THESE *BEFORE* InitPicoPins
     //************
     // kevin 10_31_24 ..actually change to defaults if any bad found..to avoid hang cases caused by illegal values
-    // after "too high clock" recovery with flash nuke uf2, and clock gets fixed, this will fix other values to legal defaults
+    // after recovery with flash nuke uf2, and clock gets fixed, this will fix other values to legal defaults
     // if (check_data_validity()==-1)  //if data was bad, breathe LED for 10 seconds and reboot. or if user presses a key enter setup
     if (check_data_validity_and_set_defaults()==-1)  //if data was bad (and got fixed!) , breathe LED for 10 seconds and reboot. or if user presses a key enter setup
     //************
@@ -578,9 +578,7 @@ show_values();          /* shows current VALUES  AND list of Valid Commands */
 			case 'P':get_user_input("custom Pcb mode (0,1): ", _custom_PCB, sizeof(_custom_PCB)); write_NVRAM(); break;
 			case 'T':show_TELEN_msg();get_user_input("TELEN config: ", _TELEN_config, sizeof(_TELEN_config)); convertToUpperCase(_TELEN_config); write_NVRAM(); break;
 			case 'B':get_user_input("Battery mode (0,1): ", _battery_mode, sizeof(_battery_mode)); write_NVRAM(); break;
-			case 'D':get_user_i// background
-// https://www.makermatrix.com/blog/read-and-write-data-with-the-pi-pico-onboard-flash/
-nput("Data-log mode (0,1,Wipe,Dump): ", _Datalog_mode, sizeof(_Datalog_mode));
+			case 'D':get_user_input("Data-log mode (0,1,Wipe,Dump): ", _Datalog_mode, sizeof(_Datalog_mode));
 						convertToUpperCase(_Datalog_mode);
 						if ((_Datalog_mode[0]=='D') || (_Datalog_mode[0]=='W') ) 
 								{
@@ -849,46 +847,44 @@ int check_data_validity(void)
  */
 void show_values(void) /* shows current VALUES  AND list of Valid Commands */
 {
-								printf(CLEAR_SCREEN);printf(UNDERLINE_ON);printf(BRIGHT);
-printf("\n\nCurrent values:\n");printf(UNDERLINE_OFF);printf(NORMAL);
-printf("\n\tCallsign:%s\n\t",_callsign);
-printf("Suffix:%s\n\t",_suffix);
-printf("U4b channel:%s",_U4B_chan);
-printf(" (Id13:%s",_id13);
-printf(" Start Minute:%s",_start_minute);
-printf(" Lane:%s)\n\t",_lane);
-printf("Verbosity:%s\n\t",_verbosity);
-// this isn't modifiable by user but still checked for correct default value
-/*printf("Oscillator Off:%s\n\t",_oscillator);*/
-printf("custom Pcb IO mappings:%s\n\t",_custom_PCB);
-printf("TELEN config:%s\n\t",_TELEN_config);
-printf("Klock speed:%sMhz  (default: 115)\n\t",_Klock_speed);
-printf("Datalog mode:%s\n\t",_Datalog_mode);
-//*************
-// kevin 10_30_24
-printf("Band:%s\n\t",_Band);
-printf("XMIT_FREQUENCY:%d\n\t",XMIT_FREQUENCY);
-//*************
-printf("Battery (low power) mode:%s\n\n",_battery_mode);
+    printf(CLEAR_SCREEN);printf(UNDERLINE_ON);printf(BRIGHT);
+    printf("\n\nCurrent values:\n");printf(UNDERLINE_OFF);printf(NORMAL);
+    printf("\n\tCallsign:%s\n\t",_callsign);
+    printf("Suffix:%s\n\t",_suffix);
+    printf("U4b channel:%s",_U4B_chan);
+    printf(" (Id13:%s",_id13);
+    printf(" Start Minute:%s",_start_minute);
+    printf(" Lane:%s)\n\t",_lane);
+    printf("Verbosity:%s\n\t",_verbosity);
+    // this isn't modifiable by user but still checked for correct default value
+    /*printf("Oscillator Off:%s\n\t",_oscillator);*/
+    printf("custom Pcb IO mappings:%s\n\t",_custom_PCB);
+    printf("TELEN config:%s\n\t",_TELEN_config);
+    printf("Klock speed:%sMhz  (default: 115)\n\t",_Klock_speed);
+    printf("Datalog mode:%s\n\t",_Datalog_mode);
+    //*************
+    // kevin 10_30_24
+    printf("Band:%s\n\t",_Band);
+    printf("XMIT_FREQUENCY:%d\n\t",XMIT_FREQUENCY);
+    //*************
+    printf("Battery (low power) mode:%s\n\n",_battery_mode);
+    printf(UNDERLINE_ON);printf(BRIGHT);
+    printf("VALID commands: ");printf(UNDERLINE_OFF);printf(NORMAL);
 
-							printf(UNDERLINE_ON);printf(BRIGHT);
-printf("VALID commands: ");printf(UNDERLINE_OFF);printf(NORMAL);
-
-printf("\n\n\tX: eXit configuraiton and reboot\n\tC: change Callsign (6 char max)\n\t");
-printf("S: change Suffix ( for WSPR3/Zachtek) use '-' to disable WSPR3\n\t");
-printf("U: change U4b channel # (0-599)\n\t");
-printf("A: change bAnd (10,12,15,17,20 default 20)\n\t");
-/*printf("I: change Id13 (two alpha numeric chars, ie Q8) use '--' to disable U4B\n\t");
-printf("M: change starting Minute (0,2,4,6,8)\n\tL: Lane (1,2,3,4) corresponding to 4 frequencies in 20M band\n\t");*/ //it is still possible to directly change these, but its not shown
-printf("V: Verbosity level (0 for no messages, 9 for too many) \n\t");
-/*printf("O: Oscillator off after transmission (default: 1) \n\t");*/
-printf("P: custom Pcb mode IO mappings (0,1)\n\t");
-printf("T: TELEN config\n\t");
-printf("K: Klock speed  (default: 115)\n\t");
-printf("D: Datalog mode (0,1,(W)ipe memory, (D)ump memory) see wiki\n\t");
-printf("B: Battery (low power) mode \n\t");
-printf("F: Frequency output (antenna tuning mode)\n\n");
-
+    printf("\n\n\tX: eXit configuraiton and reboot\n\tC: change Callsign (6 char max)\n\t");
+    printf("S: change Suffix ( for WSPR3/Zachtek) use '-' to disable WSPR3\n\t");
+    printf("U: change U4b channel # (0-599)\n\t");
+    printf("A: change bAnd (10,12,15,17,20 default 20)\n\t");
+    /*printf("I: change Id13 (two alpha numeric chars, ie Q8) use '--' to disable U4B\n\t");
+    printf("M: change starting Minute (0,2,4,6,8)\n\tL: Lane (1,2,3,4) corresponding to 4 frequencies in 20M band\n\t");*/ //it is still possible to directly change these, but its not shown
+    printf("V: Verbosity level (0 for no messages, 9 for too many) \n\t");
+    /*printf("O: Oscillator off after transmission (default: 1) \n\t");*/
+    printf("P: custom Pcb mode IO mappings (0,1)\n\t");
+    printf("T: TELEN config\n\t");
+    printf("K: Klock speed  (default: 115)\n\t");
+    printf("D: Datalog mode (0,1,(W)ipe memory, (D)ump memory) see wiki\n\t");
+    printf("B: Battery (low power) mode \n\t");
+    printf("F: Frequency output (antenna tuning mode)\n\n");
 
 }
 /**
@@ -913,7 +909,7 @@ void InitPicoPins(void)
 	gpio_set_dir(18, GPIO_OUT); //GPIO 18 used for fan control when testing TCXO stability */
 
 	int use_custom_PCB_mappings=(uint8_t)_custom_PCB[0]-'0'; 
-	if (use_custom_PCB_mappings==0)                            //do not use parallel IO low-side drive if using custom PCB
+	if (use_custom_PCB_mappings==0) //do not use parallel IO low-side drive if using custom PCB
 	{		
 	GPS_PPS_PIN = GPS_PPS_PIN_default;
 	RFOUT_PIN = RFOUT_PIN_default;
@@ -926,7 +922,7 @@ void InitPicoPins(void)
 	gpio_for_onewire=ONEWIRE_bus_pin;
 	}
 	
-    else                          //if using custom PCB 
+    else //if using custom PCB 
     {	
     gpio_for_onewire=ONEWIRE_bus_pin_pcb;
     GPS_PPS_PIN = GPS_PPS_PIN_pcb;
@@ -1103,67 +1099,69 @@ void dallas_setup() {
 		} else	puts ("could not initialise the onewire driver");
      }
 }
+
 /**
 * @note:
 * Verbosity notes:
 * 0: none
 * 1: temp/volts every second, message if no gps
 * 2: GPS status every second
-* 3:          messages when a xmition started
+* 3: messages when a xmition started
 * 4: x-tended messages when a xmition started 
 * 5: dump context every 20 secs
 * 6: show PPB every second
 * 7: Display GxRMC and GxGGA messages
 * 8: display ALL serial input from GPS module
 */
+
 /////////////////////////////////////////////////////////////////////////////////////////////////
 void datalog_special_functions()   //this called only from user-setup menu
 {
-/*		FLASH_TARGET_OFFSET(0x4 0000): a pointer to a safe place after the program memory  (
-		xip_base offset (0x1000 0000) only needed when READING, not writing)
-	    FLASH_TARGET_OFFSET = 040000x
-		FLASH_SECTOR_SIZE,   4096
-		FLASH_PAGE_SIZE       256 */		
+    /* FLASH_TARGET_OFFSET(0x4 0000): a pointer to a safe place after the program memory  (
+       xip_base offset (0x1000 0000) only needed when READING, not writing)
+       FLASH_TARGET_OFFSET = 040000x
+       FLASH_SECTOR_SIZE,   4096
+       FLASH_PAGE_SIZE       256 */		
 
-uint8_t *pointer_to_byte;
-char c;
-uint32_t byte_counter;
-uint32_t sector_count; //65- 321  //add xip_base offset ONLY when reading, each sector is 4096 bytes. this is 1MB of data in a safe place (could go close to 2MB theoreticallY). sector 64 is where NBRAM (user settings) are
-	
-if (_Datalog_mode[0]=='D') //Dumps memory to usb serial port
-{
-			printf("About to dump...\n");
+    uint8_t *pointer_to_byte;
+    char c;
+    uint32_t byte_counter;
+    uint32_t sector_count; //65- 321  //add xip_base offset ONLY when reading, each sector is 4096 bytes. this is 1MB of data in a safe place (could go close to 2MB theoreticallY). sector 64 is where NBRAM (user settings) are
+        
+    if (_Datalog_mode[0]=='D') //Dumps memory to usb serial port
+    {
+        printf("About to dump...\n");
 
-			for (sector_count=65;sector_count<(321-1);sector_count+=1)   //sector 64 is  where user settings are, so start at 65			
-			{
-				for (byte_counter=0;byte_counter<(FLASH_SECTOR_SIZE-1);byte_counter+=1)   
-				{
-					pointer_to_byte=(char *)(XIP_BASE+byte_counter+(sector_count*FLASH_SECTOR_SIZE));
-					c = *pointer_to_byte;
-					if (c==255) break;    //255 is uninitialized or blank					
-					printf("%c",c);
-				//sleep_ms(5);                     //may or may not be needed for very large transfers?
-				}  
-				if (c==255) break;
-			}
-			printf("\nDone dumping memory, zero reached at %d bytes in sector %d\n",byte_counter,sector_count);
-}
+        for (sector_count=65;sector_count<(321-1);sector_count+=1)   //sector 64 is  where user settings are, so start at 65			
+        {
+            for (byte_counter=0;byte_counter<(FLASH_SECTOR_SIZE-1);byte_counter+=1)   
+            {
+                pointer_to_byte=(char *)(XIP_BASE+byte_counter+(sector_count*FLASH_SECTOR_SIZE));
+                c = *pointer_to_byte;
+                if (c==255) break;    //255 is uninitialized or blank					
+                printf("%c",c);
+            //sleep_ms(5);                     //may or may not be needed for very large transfers?
+            }  
+            if (c==255) break;
+        }
+        printf("\nDone dumping memory, zero reached at %d bytes in sector %d\n",byte_counter,sector_count);
+    }
 
-if(_Datalog_mode[0]=='W')   
-{
-	printf("WIPING EVERYTHING in 5 seconds! press a key to abort....\n");
-	int cc=getchar_timeout_us(6000000);		
+    if(_Datalog_mode[0]=='W')   
+    {
+        printf("WIPING EVERYTHING in 5 seconds! press a key to abort....\n");
+        int cc=getchar_timeout_us(6000000);		
 
-  if (cc==PICO_ERROR_TIMEOUT)
-  {
-	printf("wiping in process, please wait...\n");
-	uint32_t ints = save_and_disable_interrupts();	
-	flash_range_erase(FLASH_SECTOR_SIZE*65L,FLASH_SECTOR_SIZE*256L );  
-	restore_interrupts (ints);
-	printf("* * * Done Wiping! * * * \n");
-  }
-  else	printf("Wipe aborted. Phew!\n");  
-}
+        if (cc==PICO_ERROR_TIMEOUT)
+        {
+            printf("wiping in process, please wait...\n");
+            uint32_t ints = save_and_disable_interrupts();	
+            flash_range_erase(FLASH_SECTOR_SIZE*65L,FLASH_SECTOR_SIZE*256L );  
+            restore_interrupts (ints);
+            printf("* * * Done Wiping! * * * \n");
+        }
+        else	printf("Wipe aborted. Phew!\n");  
+    }
 
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

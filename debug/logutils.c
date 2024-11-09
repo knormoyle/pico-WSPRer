@@ -66,11 +66,12 @@ static char logBuffer[BUFFER_SIZE] = {0};
 /// @param ... argument list to print 
 void StampPrintf(const char* pformat, ...)
 {
+    // background on i/o
+    // https://ceworkbench.wordpress.com/2023/01/04/using-the-raspberry-pi-pico-gpio-with-the-c-c-sdk/
+    
     static uint32_t sTick = 0;
-    if(!sTick)
-    {
-        stdio_init_all();
-    }
+    // inits the serial port so you can use printf
+    if(!sTick) stdio_init_all();
 
     uint64_t tm_us = to_us_since_boot(get_absolute_time());
     

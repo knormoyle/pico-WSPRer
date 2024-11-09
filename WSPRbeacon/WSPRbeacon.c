@@ -30,6 +30,7 @@ static int current_minute;
 static int oneshots[10];
 static int schedule[10];  //array index is minute, (odd minutes are unused) value is -1 for NONE or 1-4 for U4B 1st msg,U4B 2nd msg,Zachtek 1st, Zachtek 2nd, and #5 for extended TELEN
 static int at_least_one_slot_has_elapsed;
+static int at_least_one_first_packet_sent;
 static int at_least_one_GPS_fixed_has_been_obtained;
 static uint8_t _callsign_for_TYPE1[12];
 static 	uint8_t  altitude_as_power_fine;
@@ -110,7 +111,7 @@ WSPRbeaconContext *WSPRbeaconInit(const char *pcallsign, const char *pgridsquare
         if (0==strcmp(pcallsign, "TE4MIN"))
         {
             // doesn't depend on null term
-            printf("TE4MIN starting minute spray across 5 u4b channels)\n");
+            printf("TE4MIN starting 2 minute spray across 5 u4b channels)\n");
 	        for (int i=0;i < 10;i+2)
             {
                 schedule[i]=1;      //do 1st U4b packet
@@ -317,6 +318,7 @@ int WSPRbeaconCreatePacket(WSPRbeaconContext *pctx,int packet_type)  //1-6.  1: 
 	grid5 = pctx->_pu8_locator[4];  //record the values of grid chars 5 and 6 now, but they won't be used until packet type 2 is created
     grid6 = pctx->_pu8_locator[5];
 	altitude_snapshot=pctx->_pTX->_p_oscillator->_pGPStime->_altitude;     //save the value for later when used in 2nd packet
+    at_least_one_first_packet_sent=1;
    }
  if (packet_type==2)   // special encoding for 2nd packet of U4B protocol
    {
@@ -324,6 +326,13 @@ int WSPRbeaconCreatePacket(WSPRbeaconContext *pctx,int packet_type)  //1-6.  1: 
 	char CallsignU4B[7]; 
 	char Grid_U4B[7]; 
 	uint8_t  power_U4B;
+	if (at_least_one_first_packet_sent==0) // if a first packet was never created, the snapshots are incorrect. so put something in there. (issue %46)
+	{
+		grid5 = pctx->_pu8_locator[4];  //record the values of grid chars 5 and 6 now, but they won't be used until packet type 2 is created
+		grid6 = pctx->_pu8_locator[5];
+		altitude_snapshot=pctx->_pTX->_p_oscillator->_pGPStime->_altitude;
+		at_least_one_first_packet_sent==1;  //so it wont do this next time...
+	}
 
 /* inputs:  pctx->_pu8_locator (6 char grid)
 			pctx->_txSched->temp_in_Celsius
