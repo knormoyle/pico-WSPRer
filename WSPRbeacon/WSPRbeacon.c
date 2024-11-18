@@ -130,8 +130,11 @@ int gpio,  uint8_t start_minute, uint8_t id13, uint8_t suffix, const char *TELEN
         // FIX! what if it just starts with AD6Z?
         // else if (pcallsign == "AD6Z") // reserve two u4b like it's two balloons.
         else if ( 0!=(
-            strcmp(pcallsign, "AD6Z") || strcmp(pcallsign, "R2MAD") || strcmp(pcallsign, "R4MAD") ||
-            strcmp(pcallsign, "R8MAD") || strcmp(pcallsign, "R12MAD") )) {
+            strcmp(pcallsign, "AD6Z") || 
+            strcmp(pcallsign, "R2MAD") || 
+            strcmp(pcallsign, "R4MAD") ||
+            strcmp(pcallsign, "R8MAD") || 
+            strcmp(pcallsign, "R12MAD") )) {
 
             printf("%s starting minute spray double channel\n", pcallsign);
             schedule[start_minute]=1;          // do 1st U4b packet at selected minute
